@@ -1,170 +1,237 @@
-import { createClient } from '@supabase/supabase-js'
-import { useEffect, useState } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { supabase } from './supabaseClient'
+import { getRankForPoints, getGradeColor, getProgress } from './ranks'
 import './Leaderboard.css'
 
-const supabase = createClient(
-  'https://hzwsnmzdkcvawhbnkuhz.supabase.co',
-  'sb_publishable_uuWGU9HX9uj3EbIiFG-2EQ_s6cdFBWD'
-)
+const PAGE_SIZE = 12
+const AUTO_REFRESH_MS = 60000
 
-const GRADES = {
-  1050: { name: "Special Grade", color: "#e0e0e0", rarity: "⭐⭐⭐" },
-  900: { name: "Grade 1 High", color: "#a8a8a8", rarity: "⭐⭐⭐" },
-  760: { name: "Grade 1 Low", color: "#a8a8a8", rarity: "⭐⭐" },
-  630: { name: "Grade 2 High", color: "#7a7a7a", rarity: "⭐⭐" },
-  510: { name: "Grade 2 Low", color: "#7a7a7a", rarity: "⭐" },
-  400: { name: "Grade 3 High", color: "#545454", rarity: "⭐" },
-  300: { name: "Grade 3 Low", color: "#545454", rarity: "" },
-  210: { name: "Grade 4 High", color: "#3d3d3d", rarity: "" },
-  130: { name: "Grade 4 Low", color: "#3d3d3d", rarity: "" },
-  60: { name: "Grade 5 High", color: "#2b2b2b", rarity: "" },
-  0: { name: "Grade 5 Low", color: "#1f1f1f", rarity: "" },
+function PlayerCard({ player }) {
+  const grade = getRankForPoints(player.points)
+  const gradeColor = getGradeColor(player.points)
+  const progress = getProgress(player.points)
+  const wrTotal = player.wins + player.losses
+  const winrate = wrTotal ? `${Math.round((player.wins / wrTotal) * 100)}%` : 'N/A'
+
+  return (
+    <div className="player-card">
+      <div className="rank-badge">#{player.rank}</div>
+      <div
+        className="grade-badge"
+        style={{ background: gradeColor }}
+      >
+        {grade.name}
+      </div>
+
+      <div className="player-info">
+        <div className="discord-name">
+          <a
+            href={`https://discord.com/users/${player.user_id}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Discord: {player.user_id}
+          </a>
+        </div>
+        <div className="roblox-name">
+          Roblox: <span>{player.main_server || 'Unknown'}</span>
+        </div>
+      </div>
+
+      <div className="stats">
+        <div className="stat-item">
+          <span className="stat-label">Points</span>
+          <span className="stat-value points">{player.points}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Record</span>
+          <span className="stat-value record">{player.wins}W / {player.losses}L</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Winrate</span>
+          <span className="stat-value winrate">{winrate}</span>
+        </div>
+      </div>
+
+      <div className="progress-label">{progress.label}</div>
+      <div className="progress-bar">
+        <div
+          className="progress-fill"
+          style={{ width: `${progress.percent}%`, background: gradeColor, color: gradeColor }}
+        />
+      </div>
+    </div>
+  )
 }
 
 export default function Leaderboard() {
   const [players, setPlayers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(true)
-  
-  const ITEMS_PER_PAGE = 10
+  const [lastUpdated, setLastUpdated] = useState(null)
 
-  useEffect(() => {
-    async function fetchPlayers() {
-      setLoading(true)
-      let query = supabase
+  const fetchPlayers = useCallback(async ({ silent } = {}) => {
+    if (silent) setRefreshing(true)
+    else setLoading(true)
+    setError(null)
+
+    try {
+      const { data, error: supabaseError } = await supabase
         .from('players')
-        .select('user_id, points, wins, losses, main_server')
+        .select('user_id, points, main_server, wins, losses')
         .order('points', { ascending: false })
 
-      if (search) {
-        query = query.ilike('main_server', `%${search}%`)
-      }
+      if (supabaseError) throw supabaseError
 
-      const { data, error } = await query
-      if (error) console.error("Erreur Supabase:", error)
-      setPlayers(data || [])
-      setPage(1)
+      const ranked = (data || []).map((p, i) => ({ ...p, rank: i + 1 }))
+      setPlayers(ranked)
+      setLastUpdated(new Date())
+    } catch (err) {
+      setError(err.message || 'Failed to reach Supabase.')
+    } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }, [])
 
+  useEffect(() => {
     fetchPlayers()
-  }, [search])
+    const interval = setInterval(() => fetchPlayers({ silent: true }), AUTO_REFRESH_MS)
+    return () => clearInterval(interval)
+  }, [fetchPlayers])
 
-  const getGrade = (points) => {
-    for (const [threshold, gradeInfo] of Object.entries(GRADES).sort((a, b) => b[0] - a[0])) {
-      if (points >= parseInt(threshold)) {
-        return gradeInfo
-      }
-    }
-    return GRADES[0]
+  const filteredPlayers = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return players
+    return players.filter(
+      (p) =>
+        (p.main_server || '').toLowerCase().includes(q) ||
+        String(p.user_id).includes(q)
+    )
+  }, [players, search])
+
+  const totalPages = Math.max(1, Math.ceil(filteredPlayers.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const pagePlayers = filteredPlayers.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  )
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value)
+    setPage(1)
   }
-
-  const getWinrate = (wins, losses) => {
-    const total = wins + losses
-    if (total === 0) return "N/A"
-    return `${Math.round((wins / total) * 100)}%`
-  }
-
-  const start = (page - 1) * ITEMS_PER_PAGE
-  const end = start + ITEMS_PER_PAGE
-  const displayedPlayers = players.slice(start, end)
-  const totalPages = Math.ceil(players.length / ITEMS_PER_PAGE) || 1
 
   return (
     <div className="leaderboard-container">
-      {/* Header */}
       <div className="header">
         <div className="header-content">
-          <h1 className="title">EU TR JJS</h1>
-          <p className="subtitle">Jujutsu Shenanigans Ranking</p>
+          <div className="title">EU TR JJS</div>
+          <div className="subtitle">
+            Leaderboard • {players.length} player{players.length === 1 ? '' : 's'} ranked
+          </div>
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="search-container">
-        <input
-          type="text"
-          placeholder="Rechercher par pseudo Roblox..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
+        <div className="search-wrapper">
+          <input
+            className="search-input"
+            type="text"
+            placeholder="Search by Roblox name or Discord ID..."
+            value={search}
+            onChange={handleSearchChange}
+          />
+          {search && (
+            <button
+              className="clear-search-btn"
+              onClick={() => {
+                setSearch('')
+                setPage(1)
+              }}
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Leaderboard */}
       <div className="leaderboard">
-        {loading ? (
-          <div className="loading">Chargement des données...</div>
-        ) : displayedPlayers.length === 0 ? (
-          <div className="no-data">Aucun joueur trouvé.</div>
-        ) : (
+        {loading && (
+          <div className="loading">
+            <div className="spinner" />
+            Loading leaderboard...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="error-state">
+            <p>⚠️ Couldn't reach the leaderboard database.</p>
+            <p className="error-detail">{error}</p>
+            <button className="page-btn" onClick={() => fetchPlayers()}>
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && filteredPlayers.length === 0 && (
+          <div className="no-data">
+            {players.length === 0 ? 'No players yet. Be the first to get ranked!' : 'No players match your search.'}
+          </div>
+        )}
+
+        {!loading && !error && filteredPlayers.length > 0 && (
           <div className="players-grid">
-            {displayedPlayers.map((player, i) => {
-              const grade = getGrade(player.points)
-              const rank = start + i + 1
-              const medal = rank === 1 ? "I" : rank === 2 ? "II" : rank === 3 ? "III" : `#${rank}`
-              const winrate = getWinrate(player.wins, player.losses)
-
-              return (
-                <div key={player.user_id} className="player-card">
-                  <div className="rank-badge">{medal}</div>
-                  
-                  <div 
-                    className="grade-badge"
-                    style={{ borderBottom: `2px solid ${grade.color}` }}
-                  >
-                    {grade.name}
-                  </div>
-
-                  <div className="player-info">
-                    <h2 className="discord-name">@{player.user_id}</h2>
-                    <p className="roblox-name"><span>{player.main_server}</span></p>
-                  </div>
-
-                  <div className="stats">
-                    <div className="stat-item">
-                      <span className="stat-label">Points</span>
-                      <span className="stat-value points">{player.points}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Record</span>
-                      <span className="stat-value record">{player.wins}W - {player.losses}L</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Winrate</span>
-                      <span className="stat-value winrate">{winrate}</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            {pagePlayers.map((p) => (
+              <PlayerCard key={p.user_id} player={p} />
+            ))}
           </div>
         )}
       </div>
 
-      {/* Pagination */}
-      <div className="pagination">
-        <button 
-          onClick={() => setPage(p => Math.max(1, p - 1))}
-          disabled={page === 1}
-          className="page-btn"
-        >
-          PRÉCÉDENT
-        </button>
-        <span className="page-info">PAGE {page} / {totalPages}</span>
-        <button 
-          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-          disabled={page === totalPages}
-          className="page-btn"
-        >
-          SUIVANT
-        </button>
-      </div>
+      {!loading && !error && filteredPlayers.length > PAGE_SIZE && (
+        <div className="pagination">
+          <button
+            className="page-btn"
+            disabled={currentPage <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            ← Previous
+          </button>
+          <span className="page-info">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="page-btn"
+            disabled={currentPage >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next →
+          </button>
+        </div>
+      )}
 
-      {/* Footer */}
       <div className="footer">
-        <p>BASED ON SKILL, NOT GRIND.</p>
+        <div className="footer-row">
+          <span>
+            {lastUpdated
+              ? `Last updated: ${lastUpdated.toLocaleTimeString()}`
+              : ''}
+            {refreshing && ' • Refreshing...'}
+          </span>
+          <button
+            className="refresh-btn"
+            onClick={() => fetchPlayers({ silent: true })}
+            disabled={refreshing || loading}
+          >
+            🔄 Refresh Now
+          </button>
+        </div>
+        <div>EU TR JJS • No XP, no grind — grades only move from real match results.</div>
       </div>
     </div>
   )
