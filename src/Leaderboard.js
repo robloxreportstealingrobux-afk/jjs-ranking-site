@@ -114,47 +114,7 @@ function PlayerCard({ player }) {
   )
 }
 
-function PodiumCard({ player, place }) {
-  const [broken, setBroken] = useState(false)
-  const grade = getRankForPoints(player.points)
-  const gradeColor = getGradeColor(player.points)
-  const medals = getMedals(player)
-  const medalClass = place === 1 ? 'gold' : place === 2 ? 'silver' : 'bronze'
-  const medalEmoji = place === 1 ? '🥇' : place === 2 ? '🥈' : '🥉'
 
-  return (
-    <div className={`podium-item ${medalClass}`}>
-      <div className="podium-medal">{medalEmoji}</div>
-      {player.avatar_url && !broken ? (
-        <img
-          className="podium-avatar"
-          src={player.avatar_url}
-          alt={`Roblox skin of ${displayName(player)}`}
-          onError={() => setBroken(true)}
-        />
-      ) : (
-        <div className="podium-avatar-fallback" style={{ color: gradeColor, borderColor: gradeColor }}>
-          {initial(player)}
-        </div>
-      )}
-      <div className="podium-name">{displayName(player)}</div>
-      <div className="podium-id">ID: {player.user_id}</div>
-      <div className="podium-grade" style={{ color: gradeColor, borderColor: gradeColor }}>
-        {grade.name}
-      </div>
-      <div className="podium-points">{player.points} pts</div>
-      {medals.length > 0 && (
-        <div className="podium-medals">
-          {medals
-            .filter((m) => m.icon !== medalEmoji)
-            .map((m) => (
-              <span key={m.label} title={m.label}>{m.icon}</span>
-            ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 export default function Leaderboard() {
   const [players, setPlayers] = useState([])
@@ -215,7 +175,6 @@ export default function Leaderboard() {
 
   // Podium only shows on page 1, outside of search, and only if there are
   // at least 3 players — otherwise it wouldn't make visual sense.
-  const showPodium = false
   const restPlayers = pagePlayers
 
   const handleSearchChange = (e) => {
