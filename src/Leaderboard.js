@@ -280,14 +280,6 @@ export default function Leaderboard() {
           </div>
         )}
 
-        {!loading && !error && showPodium && (
-          <div className="podium">
-            {podiumPlayers.map((p) => (
-              <PodiumCard key={p.user_id} player={p} place={p.rank} />
-            ))}
-          </div>
-        )}
-
         {!loading && !error && restPlayers.length > 0 && (
           <div className="players-grid">
             {restPlayers.map((p) => (
