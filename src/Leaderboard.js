@@ -216,8 +216,7 @@ export default function Leaderboard() {
   // Podium only shows on page 1, outside of search, and only if there are
   // at least 3 players — otherwise it wouldn't make visual sense.
   const showPodium = false
-  const podiumPlayers = showPodium ? pagePlayers.slice(0, 3) : []
-  const restPlayers = showPodium ? pagePlayers.slice(3) : pagePlayers
+  const restPlayers = pagePlayers
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value)
