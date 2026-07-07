@@ -6,256 +6,199 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+  background: radial-gradient(circle at 50% 0%, #151515 0%, #050505 100%);
+  background-attachment: fixed;
   min-height: 100vh;
-  color: #fff;
+  color: #e0e0e0;
 }
 
 .leaderboard-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px 20px;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ============= HEADER ============= */
 .header {
-  background: linear-gradient(135deg, #9B30FF 0%, #FF2079 100%);
-  padding: 60px 30px;
-  border-radius: 20px;
-  margin-bottom: 40px;
+  padding: 40px 20px;
+  margin-bottom: 50px;
   text-align: center;
-  box-shadow: 0 20px 60px rgba(155, 48, 255, 0.3);
   position: relative;
-  overflow: hidden;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="white" stroke-width="0.5" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-  opacity: 0.1;
-}
-
-.header-content {
-  position: relative;
-  z-index: 1;
+  border-bottom: 1px solid #222;
 }
 
 .title {
-  font-size: 3.5rem;
+  font-size: 4rem;
   font-weight: 900;
   margin-bottom: 10px;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  letter-spacing: 2px;
+  color: #fff;
+  letter-spacing: -2px;
+  text-transform: uppercase;
 }
 
 .subtitle {
-  font-size: 1.2rem;
-  opacity: 0.95;
-  font-weight: 300;
-  letter-spacing: 1px;
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
 }
 
 /* ============= SEARCH ============= */
 .search-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 }
 
 .search-input {
   width: 100%;
-  max-width: 600px;
-  padding: 16px 24px;
-  background: rgba(26, 26, 46, 0.8);
-  border: 2px solid #9B30FF;
-  border-radius: 50px;
+  max-width: 500px;
+  padding: 18px 24px;
+  background: #0a0a0a;
+  border: 1px solid #333;
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  text-align: center;
+  letter-spacing: 1px;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #00FFD1;
-  box-shadow: 0 0 30px rgba(0, 255, 209, 0.4);
-  transform: translateY(-2px);
+  border-color: #666;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
 
 .search-input::placeholder {
-  color: #888;
+  color: #444;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 
 /* ============= LEADERBOARD ============= */
 .leaderboard {
-  margin-bottom: 40px;
+  margin-bottom: 50px;
+  flex-grow: 1;
 }
 
 .loading, .no-data {
   text-align: center;
-  padding: 60px 20px;
-  font-size: 1.3rem;
-  color: #888;
+  padding: 80px 20px;
+  font-size: 1rem;
+  color: #444;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .players-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
 }
 
 /* ============= PLAYER CARD ============= */
 .player-card {
-  background: linear-gradient(135deg, rgba(26, 26, 46, 0.9) 0%, rgba(22, 33, 62, 0.9) 100%);
-  border: 2px solid #9B30FF;
-  border-radius: 16px;
-  padding: 24px;
+  background: #080808;
+  border: 1px solid #1a1a1a;
+  padding: 30px;
   position: relative;
-  overflow: hidden;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.player-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #9B30FF, #FF2079, #00FFD1);
-  animation: slide 3s infinite;
-}
-
-@keyframes slide {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
 }
 
 .player-card:hover {
-  transform: translateY(-8px);
-  border-color: #00FFD1;
-  box-shadow: 0 20px 60px rgba(0, 255, 209, 0.2);
+  transform: translateY(-5px);
+  border-color: #333;
+  background: #0c0c0c;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
 }
 
 /* Rank Badge */
 .rank-badge {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  font-size: 1.8rem;
+  top: 25px;
+  left: 25px;
+  font-size: 2rem;
   font-weight: 900;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 8px 12px;
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
+  color: #222;
+  line-height: 1;
 }
 
 /* Grade Badge */
 .grade-badge {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 8px 16px;
-  border-radius: 50px;
-  font-size: 0.85rem;
+  top: 25px;
+  right: 25px;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #000;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.5px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 4px;
 }
 
 /* Player Info */
 .player-info {
-  margin-top: 50px;
-  margin-bottom: 20px;
+  margin-top: 40px;
+  margin-bottom: 30px;
+  text-align: center;
 }
 
 .discord-name {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #9B30FF;
-  letter-spacing: 0.5px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 5px;
+  color: #fff;
+  letter-spacing: -0.5px;
 }
 
 .roblox-name {
-  font-size: 0.95rem;
-  color: #aaa;
-  margin-bottom: 4px;
+  font-size: 0.85rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .roblox-name span {
-  color: #00FFD1;
-  font-weight: 600;
+  color: #aaa;
 }
 
 /* Stats */
 .stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 1px;
+  background: #1a1a1a;
+  border: 1px solid #1a1a1a;
 }
 
 .stat-item {
-  background: rgba(0, 0, 0, 0.3);
-  padding: 12px;
-  border-radius: 8px;
+  background: #080808;
+  padding: 15px 10px;
   text-align: center;
-  border: 1px solid rgba(155, 48, 255, 0.2);
 }
 
 .stat-label {
   display: block;
-  font-size: 0.75rem;
-  color: #888;
+  font-size: 0.65rem;
+  color: #555;
   text-transform: uppercase;
-  margin-bottom: 4px;
-  letter-spacing: 1px;
+  margin-bottom: 8px;
+  letter-spacing: 1.5px;
 }
 
 .stat-value {
   display: block;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
+  color: #ddd;
 }
 
 .stat-value.points {
-  color: #00FFD1;
-  font-size: 1.3rem;
-}
-
-.stat-value.record {
-  color: #FFD400;
-}
-
-.stat-value.winrate {
-  color: #FF2079;
-}
-
-/* Progress Bar */
-.progress-bar {
-  width: 100%;
-  height: 6px;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(155, 48, 255, 0.3);
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 10px;
-  transition: width 0.4s ease;
-  box-shadow: 0 0 15px currentColor;
+  color: #fff;
 }
 
 /* ============= PAGINATION ============= */
@@ -263,68 +206,53 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 50px;
 }
 
 .page-btn {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #9B30FF, #FF2079);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-size: 0.95rem;
+  padding: 10px 20px;
+  background: transparent;
+  color: #888;
+  border: 1px solid #333;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  letter-spacing: 0.5px;
+  letter-spacing: 2px;
 }
 
 .page-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(155, 48, 255, 0.4);
+  border-color: #fff;
+  color: #fff;
 }
 
 .page-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.2;
   cursor: not-allowed;
 }
 
 .page-info {
-  font-size: 0.95rem;
-  color: #aaa;
+  font-size: 0.8rem;
+  color: #555;
   font-weight: 600;
+  letter-spacing: 2px;
 }
 
 /* ============= FOOTER ============= */
 .footer {
   text-align: center;
-  padding: 30px 20px;
-  border-top: 2px solid rgba(155, 48, 255, 0.2);
-  color: #666;
-  font-size: 0.9rem;
+  padding: 40px 20px 20px;
+  border-top: 1px solid #1a1a1a;
+  color: #333;
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  font-weight: 800;
 }
 
 /* ============= RESPONSIVE ============= */
 @media (max-width: 768px) {
-  .title {
-    font-size: 2.5rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
-  }
-
-  .players-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stats {
-    grid-template-columns: 1fr;
-  }
-
-  .pagination {
-    gap: 10px;
-  }
+  .title { font-size: 2.5rem; }
+  .players-grid { grid-template-columns: 1fr; }
+  .pagination { flex-direction: column; gap: 15px; }
 }
