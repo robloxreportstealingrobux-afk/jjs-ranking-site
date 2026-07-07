@@ -227,7 +227,7 @@ export default function Leaderboard() {
   return (
     <div className="leaderboard-container">
       <div className="header">
-        <div className="title">EU TR JJS</div>
+        <div className="title">TR JJS</div>
         <div className="subtitle">
           Leaderboard • {players.length} player{players.length === 1 ? '' : 's'} ranked
         </div>
